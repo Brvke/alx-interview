@@ -1,71 +1,146 @@
 #!/usr/bin/python3
+"""A log parsing interview answer"""
 import sys
 import signal
+from datetime import datetime
 
-# Initialize variables
-total_size = 0
-status_codes = {"200": 0, "301": 0, "400": 0, "401": 0, "403": 0, "404": 0, "405": 0, "500": 0}
-line_count = 0
 
-def print_stats():
-    """Prints the total file size and the count of status codes in ascending order."""
-    print(f"File size: {total_size}")
-    for code in sorted(status_codes.keys()):
-        if status_codes[code] > 0:
-            print(f"{code}: {status_codes[code]}")
+def check_ip(ip: str):
+    """Returns true if IP is correct."""
+    if ip is None:
+        return False
 
-def signal_handler(sig, frame):
-    """Handles the CTRL+C signal to print stats before exiting."""
-    print_stats()
-    sys.exit(0)
+    ip_list = ip.split('.')
+    if len(ip_list) != 4:
+        return False
+    for ips in ip_list:
+        try:
+            if int(ips) < 1 or int(ips) > 255:
+                return False
+        except ValueError:
+            return False
+    return True
 
-signal.signal(signal.SIGINT, signal_handler)
 
-# Function to parse each line and validate the format
-def parse_line(line):
+def check_date(year: str, time: str):
+    """Returns true if date is in the correct format."""
+    if year is None or time is None:
+        return False
+
+    date = year + ' ' + time
+    date = date[1:-1]  # Correctly remove the brackets
+    format = "%Y-%m-%d %H:%M:%S.%f"
     try:
-        parts = line.split()
-        if len(parts) < 7:
-            return None, None
+        date_format = datetime.strptime(date, format)
+    except ValueError:
+        return False
 
-        ip_address = parts[0]
-        dash = parts[1]
-        date = parts[2] + " " + parts[3]
-        method = parts[4]
-        path = parts[5]
-        protocol = parts[6]
-        status_code = parts[-2]
-        file_size = parts[-1]
+    if date_format > datetime.now():
+        return False
 
-        if dash != "-" or not date.startswith('[') or not date.endswith(']'):
-            return None, None
+    return True
 
-        if method != '"GET' or path != "/projects/260" or protocol != 'HTTP/1.1"':
-            return None, None
 
-        # Convert and return the status code and file size if they are valid
-        if status_code in status_codes:
-            return status_code, int(file_size)
-    except (IndexError, ValueError):
-        return None, None
+def check_code(code: str):
+    """Checks if code is in correct format."""
+    if code is None:
+        return False
 
-    return None, None
+    code_list = [200, 301, 400, 401, 403, 404, 405, 500]
 
-# Read stdin line by line
-try:
+    try:
+        code_no = int(code)
+        if code_no not in code_list:
+            return False
+    except ValueError:
+        return False
+
+    return code_no
+
+
+def check_size(size: str):
+    """Checks if the size is in correct format."""
+    if size is None:
+        return False
+
+    try:
+        int_size = int(size)
+    except ValueError:
+
+        return False
+
+    return int_size
+
+
+def check_line(line: str):
+    """Checks the input line for conformity."""
+    line_list = line.split()
+
+    # Check the number of arguments
+    if len(line_list) != 9:
+        return None
+
+    # Check for proper IP address in IPv4 format
+    if check_ip(line_list[0]) is False:
+        return None
+
+    # Check for correct character after IP address
+    if line_list[1] != '-':
+        return None
+
+    # Check for correct date format
+    if check_date(line_list[2], line_list[3]) is False:
+        return None
+
+    # Check for correct GET request
+    get_request = line_list[4] + ' ' + line_list[5] + ' ' + line_list[6]
+    if get_request != "\"GET /projects/260 HTTP/1.1\"":
+        return None
+
+    # Check for correct status code
+    code = check_code(line_list[7])
+    if code is False:
+        return None
+
+    # Check for correct size
+    size = check_size(line_list[8])
+    if size is False:
+        return None
+
+    # If all checks pass, return size and code
+    return [code, size]
+
+
+if __name__ == "__main__":
+    line_count = 0
+    size = 0
+    code_dict = {200: 0, 301: 0, 400: 0, 401: 0,
+                 403: 0, 404: 0, 405: 0, 500: 0}
+
+    def myfunction():
+        print('File size: {}'.format(size), flush=True)
+        for key, values in sorted(code_dict.items()):
+            if values != 0:
+                print('{}: {}'.format(key, values), flush=True)
+
+    def sigint_handler(signal, frame):
+        myfunction()
+        sys.exit(0)
+
+    signal.signal(signal.SIGINT, sigint_handler)
+
     for line in sys.stdin:
-        status_code, file_size = parse_line(line)
-        if status_code and file_size is not None:
-            # Update total size and count for the status code
-            total_size += file_size
-            status_codes[status_code] += 1
-            line_count += 1
+        cline = check_line(line)
 
-            # Print stats every 10 lines
-            if line_count % 10 == 0:
-                print_stats()
-except Exception:
-    pass
+        if cline is None:
+            continue
 
-# Print final stats if the script ends normally
-print_stats()
+        line_count += 1
+        size += cline[1]
+        code_dict[cline[0]] += 1
+
+        if line_count == 10:
+            myfunction()
+            line_count = 0
+
+    myfunction()
