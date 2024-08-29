@@ -32,9 +32,9 @@ def solveNqueen(n):
             col.remove(c)
             posdiag.remove(r + c)
             negdiag.remove(r - c)
-            board[r] = -1  # Reset the position
+            board[r] = None  # Reset the position
 
-    board = [-1] * n  # Initialize the board
+    board = [None] * n  # Initialize the board
     backtrack(0, board)
     return result
 
