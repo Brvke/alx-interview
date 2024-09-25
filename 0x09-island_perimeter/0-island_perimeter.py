@@ -7,10 +7,10 @@ Island Perimeter
 def island_perimeter(grid):
     """
     Calculate the pm of the island described in the grid.
-    
+
     Args:
-    grid (List[List[int]]): A 2D grid where 0 and 1 represents water and land respectively.
-    
+    A 2D grid where 0 and 1 represents water and land respectively.
+
     Returns:
     int: The pm of the island.
     """
