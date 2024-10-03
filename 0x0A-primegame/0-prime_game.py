@@ -1,45 +1,68 @@
 #!/usr/bin/python3
+"""
+    An Implementation of the prime_game interview Question
+    with details explained in README.md
+"""
+
+
+def check_prime(num):
+    """
+        Args:
+            num: int value to check if prime or not
+        Returns:
+            Boolean
+    """
+
+    if num == 1:
+        return False
+
+    for i in range(2, num):
+        if num % i == 0:
+            return False
+    return True
+
+
+def primelist(num):
+    """
+        Args:
+            num: an int value of the number to play for
+        Returns:
+            a list of prime numbers from 1 upto num
+    """
+
+    # list of prime numbers from 1 until num
+    prime_list = []
+    for i in range(2, num + 1):
+        if check_prime(i):
+            prime_list.append(i)
+    return prime_list
+
 
 def isWinner(x, nums):
     """
-    Determines the winner of the Prime Game.
-    
-    Args:
-    x (int): The number of rounds.
-    nums (list): An array of n values for each round.
-    
-    Returns:
-    str: Name of the player that won the most rounds ("Maria" or "Ben").
-         Returns None if the winner cannot be determined.
+        Args:
+            x: an int value for the number of turns to play the game
+            nums: a list of number to play for
+        Returns:
+            prints the winner of the game after x rounds of playing
     """
-    def sieve_of_eratosthenes(n):
-        """Generate prime numbers up to n using Sieve of Eratosthenes."""
-        primes = [True] * (n + 1)
-        primes[0] = primes[1] = False
-        for i in range(2, int(n**0.5) + 1):
-            if primes[i]:
-                for j in range(i*i, n + 1, i):
-                    primes[j] = False
-        return primes
 
-    def count_primes(n):
-        """Count the number of primes up to n."""
-        primes = sieve_of_eratosthenes(n)
-        return sum(primes)
+    maria = 0
+    ben = 0
 
-    maria_wins = 0
-    ben_wins = 0
+    if x > len(nums):
+        return None
 
-    for n in nums:
-        prime_count = count_primes(n)
-        if prime_count % 2 == 0:
-            ben_wins += 1
-        else:
-            maria_wins += 1
+    for i in range(x):
+        prime = primelist(nums[i])
+        if len(prime) == 0 or len(prime) % 2 == 0:
+            ben += 1
+        elif len(prime) % 2 != 0:
+            maria += 1
 
-    if maria_wins > ben_wins:
-        return "Maria"
-    elif ben_wins > maria_wins:
-        return "Ben"
-    else:
+    if maria > ben:
+        return 'Maria'
+    elif ben > maria:
+        return 'Ben'
+    elif ben == maria:
         return None
